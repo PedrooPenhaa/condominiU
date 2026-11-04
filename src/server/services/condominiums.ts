@@ -118,7 +118,7 @@ async function load(deps: Deps, id: string) {
 
 /** Tipos aceitos pelo Asaas hoje; não há um tipo específico para condomínio. Confirme o enquadramento com o Asaas. */
 function companyTypeFor(legalNature: string) {
-  return legalNature === 'associacao' ? 'ASSOCIATION' : undefined;
+  return 'ASSOCIATION';
 }
 
 /** Cria a conta de recebimento do condomínio: uma subconta Asaas no CNPJ dele. */

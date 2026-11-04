@@ -1,6 +1,6 @@
 # Como publicar
 
-Este guia coloca o sistema no ar de graça para testar de ponta a ponta, com dinheiro fictício e dados fictícios. Ele usa um domínio gratuito, Vercel Hobby, Supabase Free e o sandbox do Asaas. A última seção diz o que mudar antes do primeiro cliente real.
+Este guia coloca o sistema no ar de graça para testar de ponta a ponta, com dinheiro fictício e dados fictícios. Ele usa endereços `.vercel.app`, Vercel Hobby, Supabase Free e o sandbox do Asaas. A última seção diz o que mudar antes do primeiro cliente real.
 
 ## O que ainda não foi executado
 
@@ -9,7 +9,7 @@ Estes pontos só foram testados localmente ou conferidos na documentação, ent�
 - A conexão pelo pacote `pg`, porque os testes usaram um cliente próprio de desenvolvimento.
 - O deploy real na Vercel, porque a função e as rotas só rodaram localmente.
 - A integração real com o Asaas, porque os testes usaram um simulador.
-- O domínio gratuito com os nameservers da Vercel.
+- Os endereços `.vercel.app` adicionados ao projeto.
 
 ## Regras do teste gratuito
 
@@ -24,14 +24,16 @@ Estes pontos só foram testados localmente ou conferidos na documentação, ent�
 - Supabase, no plano Free. Escolha São Paulo se a região estiver disponível.
 - [Sandbox do Asaas](https://docs.asaas.com/docs/sandbox).
 
-## 2. Escolha o domínio
+## 2. Escolha os endereços
 
-Cada condomínio usa um subdomínio, então é preciso um domínio próprio. A Freenom [não é mais gratuita](https://domainincite.com/31821-freenom-is-back-but-no-longer-free). Escolha uma destas opções:
+Escolha uma destas opções:
 
-- **Grátis:** registre um nome na [DigitalPlat](https://themenonlab.blog/blog/free-domain-names-digitalplat), como `meuteste.qzz.io`. O serviço não tem garantia de funcionamento, então use só no teste.
-- **Definitivo:** registre um `.com.br`, por [cerca de R$ 40 por ano](https://hostgator.com.br/blog/quanto-custa-um-dominio/). Ele elimina o risco do domínio gratuito e pode continuar depois do teste.
+- **Grátis, só para o teste:** use endereços `.vercel.app`, como `condominiu-admin.vercel.app`. Cada condomínio precisa ser adicionado à mão na Vercel, com até 50 domínios no plano Hobby.
+- **Definitivo:** registre um `.com.br`, por [cerca de R$ 40 por ano](https://hostgator.com.br/blog/quanto-custa-um-dominio/). Os condomínios novos funcionam sozinhos, pelo curinga.
 
-No restante do guia, `seudominio` representa o nome escolhido.
+Domínios gratuitos da DigitalPlat em `dpdns.org` não funcionam: a Vercel pede um registro em `_vercel.dpdns.org`, que só o dono de `dpdns.org` pode criar.
+
+No restante do guia, `admin.seudominio` representa o endereço da administração. Na opção grátis, ele é `condominiu-admin.vercel.app`.
 
 ## 3. Prepare o banco
 
@@ -49,7 +51,11 @@ No restante do guia, `seudominio` representa o nome escolhido.
    postgres://condo_app.REF_DO_PROJETO:SENHA@HOST_DO_POOLER:6543/postgres
    ```
 
-4. Em **Database Settings**, baixe o certificado raiz e guarde o conteúdo para `DB_SSL_CA`, em uma linha, com `\n` no lugar das quebras.
+4. Em **Database Settings**, baixe o certificado raiz e guarde o conteúdo para `DB_SSL_CA`, em uma linha, com `\n` no lugar das quebras. No PowerShell, este comando copia o valor pronto, trocando o nome pelo do arquivo baixado:
+
+   ```powershell
+   (Get-Content .\certificado.crt -Raw).Trim() -replace "\r?\n","\n" | Set-Clipboard
+   ```
 
 ## 4. Pegue os dados do Asaas
 
@@ -59,6 +65,8 @@ No restante do guia, `seudominio` representa o nome escolhido.
    ```sh
    curl -H 'access_token: SUA_CHAVE' -H 'User-Agent: condominios' https://api-sandbox.asaas.com/v3/wallets
    ```
+
+   No Windows PowerShell, escreva `curl.exe` no lugar de `curl`.
 
 3. Guarde o `id` da resposta para `ASAAS_WALLET_ID`.
 4. Em **Integrações > Segurança**, habilite o split.
@@ -70,7 +78,8 @@ No restante do guia, `seudominio` representa o nome escolhido.
 
 | Variável | Valor |
 |---|---|
-| `BASE_DOMAIN` | `seudominio` |
+| `BASE_DOMAIN` | Seu domínio, ou `vercel.app` na opção grátis |
+| `HOST_PREFIX` | Na opção grátis, um prefixo como `condominiu-`; com domínio próprio, deixe de fora |
 | `BRAND_NAME` | Nome da empresa |
 | `NODE_ENV` | `production` |
 | `TRUST_PROXY` | `1` |
@@ -95,14 +104,21 @@ Sem a `ENCRYPTION_KEY` original, as chaves das subcontas não podem mais ser lid
 
 A rotina diária já vem configurada para as 9h17 UTC. No plano Hobby, ela [pode rodar em qualquer momento dentro dessa hora](https://vercel.com/docs/cron-jobs/manage-cron-jobs).
 
-## 6. Conecte o domínio
+## 6. Conecte os endereços
+
+**Opção grátis, com `.vercel.app`**
+
+1. Em **Settings > Domains**, clique em **Add Existing** e adicione `condominiu-admin.vercel.app`, trocando `condominiu-` pelo seu `HOST_PREFIX`.
+2. Adicione do mesmo jeito cada condomínio que for testar, como `condominiu-aurora.vercel.app`, usando o endereço mostrado no cadastro.
+3. Em uma janela anônima, abra `https://condominiu-admin.vercel.app/healthz`. A resposta esperada é `{"ok":true}`.
+4. Se aparecer uma tela de login da Vercel, desligue a proteção em **Settings > Deployment Protection**, porque os webhooks do Asaas também seriam bloqueados.
+
+**Domínio próprio**
 
 1. Em **Settings > Domains**, adicione `*.seudominio`. A Vercel vai mostrar os nameservers dela.
 2. No painel do domínio, coloque esses nameservers.
 3. Espere a propagação. A Vercel diz que ela [normalmente leva de 24 a 48 horas](https://vercel.com/docs/platforms/multi-tenant-platforms/limits).
 4. Abra `https://admin.seudominio/healthz`. A resposta esperada é `{"ok":true}`.
-
-Se o domínio gratuito não aceitar os nameservers da Vercel, use um DNS externo e [delegue a validação do certificado](https://vercel.com/docs/domains/working-with-domains/add-a-domain#use-wildcard-domains-with-an-external-dns-provider). Com a [DigitalPlat](https://github.com/DigitalPlatDev/FreeDomain/discussions/80048), a Cloudflare pode recusar o nome, e o deSEC é a alternativa indicada por usuários. Se isso travar o teste, troque por um `.com.br`.
 
 ## 7. Crie o seu acesso
 
@@ -111,6 +127,15 @@ No seu computador, crie um arquivo `.env` com `DATABASE_URL` e `DB_SSL_CA`, depo
 ```sh
 npm install
 ADMIN_EMAIL=voce@empresa.com ADMIN_NAME="Seu nome" ADMIN_PASSWORD="senha-longa-aqui" npm run create-admin
+```
+
+No PowerShell, troque a segunda linha por:
+
+```powershell
+$env:ADMIN_EMAIL = "voce@empresa.com"
+$env:ADMIN_NAME = "Seu nome"
+$env:ADMIN_PASSWORD = "senha-longa-aqui"
+npm run create-admin
 ```
 
 Entre em `https://admin.seudominio`.
@@ -141,11 +166,13 @@ Faça este roteiro pelo painel e confira no Asaas. O sandbox [aprova contas auto
   curl -H 'x-jobs-secret: SEU_JOBS_SECRET' -X POST https://admin.seudominio/internal/jobs/run
   ```
 
+  No Windows PowerShell, escreva `curl.exe` no lugar de `curl`.
+
 O sandbox [nem sempre se comporta como a produção](https://docs.asaas.com/docs/sandbox), então passar neste roteiro não dispensa o teste real da próxima seção.
 
 ## 10. Antes do primeiro cliente real
 
-1. Registre o domínio definitivo, se ainda estiver no gratuito.
+1. Registre o domínio definitivo, se ainda estiver usando `.vercel.app`, e remova `HOST_PREFIX`.
 2. Passe para Vercel Pro e Supabase Pro, e ative o backup do banco. Teste uma restauração.
 3. [Peça a homologação ao Asaas](https://docs.asaas.com/docs/faq-periodo-de-avaliacao). Antes dela, o limite é de 10 subcontas, R$ 2.000 em cobranças por subconta e 60 dias.
 4. Confirme com o gerente do Asaas:

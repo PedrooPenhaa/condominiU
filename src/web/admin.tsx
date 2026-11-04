@@ -6,7 +6,7 @@ function slugify(name: string) {
   return name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50);
 }
 
-export function AdminApp({ me, brand, baseDomain, onLogout }: { me: any; brand: string; baseDomain: string; onLogout: () => void }) {
+export function AdminApp({ me, brand, hostOf, onLogout }: { me: any; brand: string; hostOf: (slug: string) => string; onLogout: () => void }) {
   const path = usePath();
   const detail = /^\/condominios\/([0-9a-f-]{36})$/.exec(path);
   return (
@@ -22,15 +22,15 @@ export function AdminApp({ me, brand, baseDomain, onLogout }: { me: any; brand: 
       </header>
       <main className="page">
         {path === '/mensalidades' ? <Invoices />
-          : path === '/condominios/novo' ? <NewCondominium baseDomain={baseDomain} />
+          : path === '/condominios/novo' ? <NewCondominium hostOf={hostOf} />
           : detail ? <CondominiumDetail id={detail[1]!} />
-          : <Overview baseDomain={baseDomain} />}
+          : <Overview hostOf={hostOf} />}
       </main>
     </div>
   );
 }
 
-function Overview({ baseDomain }: { baseDomain: string }) {
+function Overview({ hostOf }: { hostOf: (slug: string) => string }) {
   const dashboard = useLoad(() => api('/platform/dashboard'), []);
   const list = useLoad(() => api<any[]>('/platform/condominiums'), []);
   if (!dashboard.data || !list.data) return <Loading error={dashboard.error ?? list.error} />;
@@ -62,7 +62,7 @@ function Overview({ baseDomain }: { baseDomain: string }) {
               {list.data.map((c) => (
                 <tr key={c.id}>
                   <td><Link to={`/condominios/${c.id}`}>{c.name}</Link></td>
-                  <td className="muted">{c.slug}.{baseDomain}</td>
+                  <td className="muted">{hostOf(c.slug)}</td>
                   <td>{KIND_LABEL[c.kind]}{c.has_concierge ? ', com portaria' : ', sem portaria'}</td>
                   <td className="num">{c.unit_count}</td>
                   <td className="num">{money(c.fee_monthly_cents)}</td>
@@ -80,7 +80,7 @@ function Overview({ baseDomain }: { baseDomain: string }) {
   );
 }
 
-function NewCondominium({ baseDomain }: { baseDomain: string }) {
+function NewCondominium({ hostOf }: { hostOf: (slug: string) => string }) {
   const [form, setForm] = useState<Record<string, any>>({
     name: '', slug: '', kind: 'predio', hasConcierge: 'sim', legalNature: 'condominio_edilicio', cnpj: '', email: '', mobilePhone: '',
     postalCode: '', address: '', addressNumber: '', complement: '', province: '', monthlyIncome: '', feeMonthly: '197,00',
@@ -136,7 +136,7 @@ function NewCondominium({ baseDomain }: { baseDomain: string }) {
         <legend>Identificação</legend>
         <div className="grid-2">
           <Field label="Nome"><input required value={form.name} onChange={set('name')} /></Field>
-          <Field label="Endereço do painel" hint={slug ? `${slug}.${baseDomain}` : `seucondominio.${baseDomain}`}>
+          <Field label="Endereço do painel" hint={hostOf(slug || 'seucondominio')}>
             <input required pattern="[a-z0-9-]+" value={slug} onChange={(e) => { setSlugTouched(true); setForm((f) => ({ ...f, slug: e.target.value })); }} />
           </Field>
           <Field label="Tipo">

@@ -23,6 +23,6 @@ export function condominiumAsaas(deps: Deps, condominium: Row) {
 }
 
 export function publicUrl(deps: Deps, subdomain: string, path = '') {
-  const { publicProtocol, publicPort, baseDomain } = deps.config;
-  return `${publicProtocol}://${subdomain}.${baseDomain}${publicPort}${path}`;
+  const { publicProtocol, publicPort, baseDomain, hostPrefix } = deps.config;
+  return `${publicProtocol}://${hostPrefix}${subdomain}.${baseDomain}${publicPort}${path}`;
 }

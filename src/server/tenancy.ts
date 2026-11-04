@@ -11,13 +11,19 @@ export const RESERVED_SLUGS = new Set([
   'staging', 'sandbox', 'webhook', 'webhooks', 'pagamentos', 'financeiro',
 ]);
 
-export function parseHost(rawHost: string, baseDomain: string): HostContext {
+/**
+ * Com hostPrefix, os endereços têm a forma <prefixo><nome>.<domínio>, como condominiu-admin.vercel.app.
+ * Esse modo existe para testar sem domínio próprio.
+ */
+export function parseHost(rawHost: string, baseDomain: string, hostPrefix = ''): HostContext {
   const host = rawHost.toLowerCase().replace(/:\d+$/, '').replace(/\.$/, '');
   if (host === baseDomain || host === `www.${baseDomain}`) return { kind: 'root' };
   const suffix = `.${baseDomain}`;
   if (!host.endsWith(suffix)) return { kind: 'root' };
-  const sub = host.slice(0, -suffix.length);
-  if (sub.includes('.')) return { kind: 'root' };
+  const label = host.slice(0, -suffix.length);
+  if (label.includes('.') || !label.startsWith(hostPrefix)) return { kind: 'root' };
+  const sub = label.slice(hostPrefix.length);
+  if (!sub) return { kind: 'root' };
   if (sub === 'admin') return { kind: 'platform' };
   if (sub === 'api') return { kind: 'api' };
   if (RESERVED_SLUGS.has(sub)) return { kind: 'root' };

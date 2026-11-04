@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { createDb } from '../src/server/db/index.ts';
+import { pathToFileURL } from 'node:url';
 
 /** Aplica as migrações pendentes, em ordem. Use a conexão do dono do banco. */
 export async function migrate(url: string, dir = 'db/migrations') {
@@ -22,7 +23,7 @@ export async function migrate(url: string, dir = 'db/migrations') {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]!).href) {
   const url = process.env.DATABASE_ADMIN_URL;
   if (!url) throw new Error('Defina DATABASE_ADMIN_URL');
   await migrate(url);

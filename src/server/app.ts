@@ -146,7 +146,7 @@ function route(method: string, path: string, scope: Scope, handler: Route['handl
 // Público
 route('GET', '/healthz', 'public', async () => ({ ok: true }));
 route('GET', '/api/v1/context', 'public', async (ctx) => {
-  const base = { host: ctx.host.kind, brand: ctx.deps.config.brandName, base_domain: ctx.deps.config.baseDomain };
+  const base = { host: ctx.host.kind, brand: ctx.deps.config.brandName, base_domain: ctx.deps.config.baseDomain, host_prefix: ctx.deps.config.hostPrefix };
   if (ctx.host.kind !== 'tenant') return base;
   const slug = ctx.host.slug;
   const [row] = await withPlatform(ctx.deps.db, (c) =>
@@ -366,7 +366,7 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
     const { token, viaCookie } = readToken(req, deps);
     const ctx: Ctx = {
       req, url, deps, token, viaCookie,
-      host: parseHost(hostHeader(req, deps), deps.config.baseDomain),
+      host: parseHost(hostHeader(req, deps), deps.config.baseDomain, deps.config.hostPrefix),
       params: match.m.slice(1),
       user: null,
       outHeaders: new Headers(),

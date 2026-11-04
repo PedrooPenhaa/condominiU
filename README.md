@@ -23,10 +23,18 @@ O sistema entra no banco com o papel `condo_app`, que não pode ignorar o isolam
 Precisa de Node 22.13 ou mais novo e de um Postgres local que aceite conexão sem senha, por exemplo:
 
 ```sh
-docker run --name condo-pg -e POSTGRES_HOST_AUTH_METHOD=trust -p 55432:5432 -d postgres:16
+docker run --name condo-pg -e POSTGRES_HOST_AUTH_METHOD=trust -p 127.0.0.1:55432:5432 -d postgres:16
 npm install
 DEMO_ADMIN_URL=wire://postgres@127.0.0.1:55432/postgres \
 DEMO_APP_URL=wire://condo_app@127.0.0.1:55432/postgres \
+npm run demo
+```
+
+No PowerShell, troque as três últimas linhas por:
+
+```powershell
+$env:DEMO_ADMIN_URL = "wire://postgres@127.0.0.1:55432/postgres"
+$env:DEMO_APP_URL = "wire://condo_app@127.0.0.1:55432/postgres"
 npm run demo
 ```
 

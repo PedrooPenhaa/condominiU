@@ -1,5 +1,6 @@
 import { createServer, type Server } from 'node:http';
 import { randomUUID } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
 
 /**
  * Simulador local do Asaas para testes e demonstração. Não substitui o sandbox real:
@@ -116,7 +117,7 @@ export async function startFakeAsaas(port = 0): Promise<FakeAsaas> {
   return state;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]!).href) {
   const fake = await startFakeAsaas(Number(process.env.FAKE_ASAAS_PORT ?? 4010));
   console.log(`Simulador do Asaas em ${fake.url}`);
 }

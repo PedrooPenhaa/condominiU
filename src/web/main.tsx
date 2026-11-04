@@ -104,13 +104,13 @@ function App() {
     return (
       <main className="center">
         <h1>{context.brand}</h1>
-        <p>Entre pelo endereço do seu condomínio, no formato seucondominio.{context.base_domain}.</p>
+        <p>Entre pelo endereço do seu condomínio, no formato {context.host_prefix}seucondominio.{context.base_domain}.</p>
       </main>
     );
   }
   if (!me) return <Login context={context} onDone={loadMe} />;
   if (me.user.must_change_password) return <ChangePassword onDone={loadMe} />;
-  if (context.host === 'platform') return <AdminApp me={me} brand={context.brand} baseDomain={context.base_domain} onLogout={logout} />;
+  if (context.host === 'platform') return <AdminApp me={me} brand={context.brand} hostOf={(slug: string) => `${context.host_prefix}${slug}.${context.base_domain}`} onLogout={logout} />;
   return <TenantApp me={me} context={context} onLogout={logout} />;
 }
 

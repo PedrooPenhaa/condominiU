@@ -19,6 +19,18 @@ test('identifica o tipo de endereço', () => {
   assert.deepEqual(parseHost('evilminhagestora.com.br', BASE), { kind: 'root' });
 });
 
+test('identifica endereços com prefixo, para testar sem domínio próprio', () => {
+  const parse = (host: string) => parseHost(host, 'vercel.app', 'condominiu-');
+  assert.deepEqual(parse('condominiu-admin.vercel.app'), { kind: 'platform' });
+  assert.deepEqual(parse('condominiu-api.vercel.app'), { kind: 'api' });
+  assert.deepEqual(parse('condominiu-aurora.vercel.app'), { kind: 'tenant', slug: 'aurora' });
+  assert.deepEqual(parse('condominiu.vercel.app'), { kind: 'root' });
+  assert.deepEqual(parse('condominiu-.vercel.app'), { kind: 'root' });
+  assert.deepEqual(parse('aurora.vercel.app'), { kind: 'root' });
+  assert.deepEqual(parse('admin.vercel.app'), { kind: 'root' });
+  assert.deepEqual(parse('x.condominiu-admin.vercel.app'), { kind: 'root' });
+});
+
 test('sugere e valida endereços', () => {
   assert.equal(slugify('Residencial Águas Claras - Bloco Único'), 'residencial-aguas-claras-bloco-unico');
   assert.equal(validSlug('aurora'), true);

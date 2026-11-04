@@ -1,5 +1,6 @@
 export interface Config {
   baseDomain: string;
+  hostPrefix: string;
   brandName: string;
   databaseUrl: string;
   encryptionKey: Buffer;
@@ -33,8 +34,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   if (!asaasBaseUrl) throw new Error('ASAAS_ENV precisa ser sandbox ou production');
   const webhookToken = required('ASAAS_WEBHOOK_TOKEN');
   if (webhookToken.length < 32) throw new Error('ASAAS_WEBHOOK_TOKEN precisa ter ao menos 32 caracteres');
+  const hostPrefix = (env.HOST_PREFIX ?? '').toLowerCase();
+  if (!/^[a-z0-9-]{0,13}$/.test(hostPrefix)) throw new Error('HOST_PREFIX aceita até 13 letras, números e hifens');
   return {
     baseDomain: required('BASE_DOMAIN').toLowerCase(),
+    hostPrefix,
     brandName: env.BRAND_NAME ?? 'Gestora de condomínios',
     databaseUrl: required('DATABASE_URL'),
     encryptionKey,
